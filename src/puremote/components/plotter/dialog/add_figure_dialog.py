@@ -5,7 +5,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from puremote.config.config import get_config
 from puremote.models.trail_data import TrialData
 from qfluentwidgets import (
     EditableComboBox,
@@ -13,6 +12,8 @@ from qfluentwidgets import (
     ComboBox,
     Dialog,
 )
+
+from puremote.config.config import config_store
 
 
 class RefreshComboBox(ComboBox):
@@ -51,8 +52,6 @@ class AddFigureDialog(Dialog):
         self.cancelButton.clicked.connect(self.reject)
 
     def _init_plotter(self):
-        self.config = get_config()
-
         # Add Plot data source
         label_data = BodyLabel(self.tr("data"))
         self.combo_box_data = RefreshComboBox()
@@ -77,7 +76,7 @@ class AddFigureDialog(Dialog):
         self.layout_input.addRow(label_type, self.combo_box_type)
 
         # Add preset
-        for i in self.config.figure:
+        for i in config_store.config.figure:
             self.combo_box_data.addItem(i.nickname)
 
     def _emit_accepted(self):
@@ -92,7 +91,7 @@ class AddFigureDialog(Dialog):
         self.combo_box_data.clear()
 
         # add preset
-        for i in self.config.figure:
+        for i in config_store.config.figure:
             self.combo_box_data.addItem(i.nickname)
 
         # add data address from trialdata
@@ -103,7 +102,7 @@ class AddFigureDialog(Dialog):
         self.combo_box_xaxis.clear()
         self.combo_box_yaxis.clear()
 
-        for i in self.config.figure:
+        for i in config_store.config.figure:
             if self.combo_box_data.currentText() == i.nickname:
                 self.combo_box_xaxis.addItem(i.x_axis)
                 self.combo_box_yaxis.addItem(i.y_axis)

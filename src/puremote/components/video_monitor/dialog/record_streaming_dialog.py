@@ -5,25 +5,25 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
 )
 
-from puremote.config.config import get_config
-
 from qfluentwidgets import (
     EditableComboBox,
     PushButton,
     Dialog,
 )
 
+from puremote.config.config import config_store
+
 
 class RecordStreamingDialog(Dialog):
     emit_accepted = Signal(str)  # Return rtsp server url and backend type
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self) -> None:
         """Dialog for set record streaming
 
         Args:
             parent (QWidget): parent widget
         """
-        super().__init__("Record Streaming", "Using for record streaming", parent)
+        super().__init__("Record Streaming", "Using for record streaming")
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -46,14 +46,12 @@ class RecordStreamingDialog(Dialog):
         Create input component
         """
 
-        config = get_config()
-
         self.combobox_address = EditableComboBox()
         self.combobox_address.setPlaceholderText(
             self.tr("Folder for store video streaming")
         )
 
-        item_list: list = [i for i in config.video_source.values()]
+        item_list: list = [i for i in config_store.config.video_source.values()]
         self.combobox_address.addItems(item_list)
         self.button_browse = PushButton(self.tr("Browse"))
         self.button_browse.clicked.connect(self._get_floder)
