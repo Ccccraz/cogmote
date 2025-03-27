@@ -15,10 +15,9 @@ from puremote.components.video_monitor.dialog.record_streaming_dialog import (
 
 
 class VideoMonitorCard(QWidget):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self._init_ui()
-        self.parent_up = parent
 
     def _init_ui(self):
         self.layout_main = QVBoxLayout()
@@ -77,12 +76,12 @@ class VideoMonitorCard(QWidget):
             logger.exception(e)
 
     def show_link_dialog(self) -> None:
-        dialog_link = LinkStreamingDialog(self.parent_up)
+        dialog_link = LinkStreamingDialog()
         dialog_link.emit_accepted.connect(self.play)
         dialog_link.exec()
 
     def show_record_dialog(self) -> None:
-        dialog_record = RecordStreamingDialog(self.parent_up)
+        dialog_record = RecordStreamingDialog()
         dialog_record.emit_accepted.connect(self.record)
         dialog_record.exec()
 

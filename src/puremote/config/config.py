@@ -5,6 +5,8 @@ import json
 import os
 import appdirs
 
+from puremote.common.logger import logger
+
 
 class Figure(BaseModel):
     nickname: str
@@ -12,7 +14,7 @@ class Figure(BaseModel):
     y_axis: str
 
 
-class Config(BaseModel):
+class ConfigModel(BaseModel):
     """
     Configuration model class for storing various configuration parameters of the application
 
@@ -51,64 +53,56 @@ CONFIG_FILE_PATH = Path(
     )
 )
 
-config: Config | None = None
 
+class Configure:
+    def __init__(self):
+        self.config = self._load_config()
 
-def create_default_config():
-    default_config = Config()
-    try:
-        CONFIG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    def _create_default_config(self) -> ConfigModel:
+        config = ConfigModel()
+        try:
+            CONFIG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-        with CONFIG_FILE_PATH.open("w") as f:
-            json.dump(default_config.model_dump(), f, indent=4)
-    except IOError:
-        print("Failed to create configuration file")
+            with CONFIG_FILE_PATH.open("w") as f:
+                json.dump(config.model_dump(), f, indent=4)
 
+            return config
+        except IOError:
+            logger.error("Failed to create configuration file")
 
-def load_config():
-    global config
-    global CONFIG_FILE_PATH
+    def _load_config(self) -> ConfigModel:
+        # Check if the file exists
+        if not os.path.exists(CONFIG_FILE_PATH):
+            logger.info("Configuration file not found")
+            logger.info(f"Creating default configuration file at {CONFIG_FILE_PATH}")
+            return self._create_default_config()
 
-    # Check if the file exists
-    if not os.path.exists(CONFIG_FILE_PATH):
-        print("Configuration file not found")
-        create_default_config()
+        # Check if the file is readable
+        if not os.access(CONFIG_FILE_PATH, os.R_OK):
+            logger.warning("No permission to read the configuration file")
+            logger.warning(
+                f"Trying to switch to default configuration file at {CONFIG_FILE_PATH}"
+            )
+            return self._create_default_config()
 
-    # Check if the file is readable
-    if not os.access(CONFIG_FILE_PATH, os.R_OK):
-        print("No permission to read the configuration file")
-        return
+        try:
+            with open(CONFIG_FILE_PATH, "r") as f:
+                return ConfigModel(**json.load(f))
+        except json.JSONDecodeError:
+            logger.error("Configuration file format error")
+        except ValidationError as e:
+            logger.error(f"Configuration file is invalid: {e}")
 
-    try:
-        with open(CONFIG_FILE_PATH, "r") as f:
-            config_data = json.load(f)
-
-        # Check if the data is valid
-        config = Config(**config_data)
-    except json.JSONDecodeError:
-        print("Configuration file format error")
-    except ValidationError as e:
-        print(f"Configuration file is invalid: {e}")
-
-
-def get_config() -> Config:
-    if config is None:
-        load_config()
-
-    assert config is not None
-    return config
-
-
-def set_config():
-    if config is not None:
+    def save(self):
         try:
             with open(CONFIG_FILE_PATH, "w") as f:
-                json.dump(config.model_dump(), f, indent=4)
+                json.dump(self.config.model_dump(), f, indent=4)
         except IOError:
-            print("Failed to write configuration file")
+            logger.error("Failed to write configuration file")
 
+
+config_store = Configure()
 
 if __name__ == "__main__":
-    load_config()
-
-    print(get_config().model_dump_json(indent=4))
+    config = Configure()
+    logger.info(config.config.model_dump_json(indent=4))
