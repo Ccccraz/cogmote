@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from puremote.models.trail_data import TrialData
+from puremote.models.trail_data import trial_data_store
 from qfluentwidgets import (
     EditableComboBox,
     BodyLabel,
@@ -34,7 +34,6 @@ class AddFigureDialog(Dialog):
 
     def __init__(self, parent=None):
         super().__init__(self.tr("Add figure"), "", parent)
-        self.data = TrialData()
         self._init_ui()
 
     def _init_ui(self):
@@ -95,7 +94,7 @@ class AddFigureDialog(Dialog):
             self.combo_box_data.addItem(i.nickname)
 
         # add data address from trialdata
-        for i in self.data.data:
+        for i in trial_data_store.data:
             self.combo_box_data.addItem(i)
 
     def index_axis(self):
@@ -107,8 +106,8 @@ class AddFigureDialog(Dialog):
                 self.combo_box_xaxis.addItem(i.x_axis)
                 self.combo_box_yaxis.addItem(i.y_axis)
 
-        if self.data.data != {}:
-            keys = self.data.data[self.combo_box_data.currentText()]._data[0].keys()
+        if trial_data_store.data != {}:
+            keys = trial_data_store.data[self.combo_box_data.currentText()]._data[0].keys()
 
             for i in keys:
                 self.combo_box_xaxis.addItem(i)

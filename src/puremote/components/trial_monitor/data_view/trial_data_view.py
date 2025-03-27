@@ -1,7 +1,7 @@
 import sys
 
 from puremote.shared.web_requests.http_listener import HttpListener, HttpListenerSse
-from puremote.models.trail_data import TrialDataModel, TrialData
+from puremote.models.trail_data import TrialDataModel, trial_data_store
 
 from PySide6.QtCore import Signal, QThread, Slot
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication
@@ -28,7 +28,6 @@ class TrialDataView(QWidget):
         self.table.setRowCount(10)
         self.table.setColumnCount(10)
         self.layout_main.addWidget(self.table)
-
 
     def init_listener(self, address: str, option: str) -> None:
         self.address = address
@@ -58,8 +57,7 @@ class TrialDataView(QWidget):
             self.table.deleteLater()
 
             self.data_model = TrialDataModel(data)
-            trial_data = TrialData()
-            trial_data.add_data(self.address, self.data_model)
+            trial_data_store.add_data("Tmp", self.address, self.data_model)
             self.table = TableView()
             self.table.setBorderVisible(True)
             self.table.setBorderRadius(8)
@@ -79,6 +77,7 @@ class TrialDataView(QWidget):
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import QMainWindow
+
     app = QApplication(sys.argv)
 
     class MainWindow(QMainWindow):
