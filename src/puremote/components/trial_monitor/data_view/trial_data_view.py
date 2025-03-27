@@ -73,6 +73,7 @@ class TrialDataView(QWidget):
     def stop(self) -> None:
         if self.listener is not None:
             self.listener.stop()
+            self.listener_thread.wait(1000)
 
 
 if __name__ == "__main__":
