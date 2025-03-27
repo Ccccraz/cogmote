@@ -41,7 +41,6 @@ class HttpListener(QObject):
 
 class HttpListenerSse(QObject):
     received = Signal(str)
-    finished = Signal()
 
     def __init__(self, address: str) -> None:
         super().__init__()
@@ -52,6 +51,7 @@ class HttpListenerSse(QObject):
     def stop(self) -> None:
         self.client.close()
 
+    # TODO: Better cancelation
     @Slot()
     def run(self):
         logger.info(f"Listening on {self.url}")
@@ -64,8 +64,6 @@ class HttpListenerSse(QObject):
                     self.received.emit(sse.data)
         except Exception as e:
             logger.error(f"Listener crashed: {str(e)}")
-        finally:
-            self.finished.emit()
 
 
 if __name__ == "__main__":

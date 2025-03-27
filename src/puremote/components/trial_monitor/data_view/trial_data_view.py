@@ -43,8 +43,6 @@ class TrialDataView(QWidget):
         self.listener_thread.started.connect(self.listener.run)
         self.listener_thread.finished.connect(self.listener_thread.deleteLater)
 
-        self.listener.finished.connect(self.listener_thread.quit)
-        self.listener.finished.connect(self.listener.deleteLater)
         self.listener.received.connect(self._update_view)
 
         self._is_init = False
@@ -73,7 +71,10 @@ class TrialDataView(QWidget):
     def stop(self) -> None:
         if self.listener is not None:
             self.listener.stop()
-            self.listener_thread.wait(1000)
+            self.listener_thread.quit()
+            self.listener_thread.wait()
+            self.listener.deleteLater()
+            self.listener_thread.deleteLater()
 
 
 if __name__ == "__main__":
