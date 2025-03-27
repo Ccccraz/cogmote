@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from PySide6.QtCore import (
     Qt,
     QAbstractTableModel,
@@ -5,7 +6,6 @@ from PySide6.QtCore import (
     QPersistentModelIndex,
 )
 from PySide6.QtGui import QFont
-from puremote.shared.base.singleton_base import SingletonMeta
 import json
 
 
@@ -62,13 +62,23 @@ class TrialDataModel(QAbstractTableModel):
         self.endInsertRows()
 
 
-class TrialData(metaclass=SingletonMeta):
-    def __init__(self) -> None:
-        self._store: dict[str, TrialDataModel] = {}
+@dataclass
+class TrialData:
+    nickname: str
+    address: str
+    data: TrialDataModel
 
-    def add_data(self, address: str, data: TrialDataModel) -> None:
+
+class TrialDataStore():
+    def __init__(self) -> None:
+        self._store: dict[str, TrialData] = {}
+
+    def add_data(self, nickname: str, address: str, trial_data: TrialDataModel) -> None:
+        data = TrialData(nickname, address, trial_data)
         self._store[address] = data
 
     @property
     def data(self):
         return self._store
+
+trial_data_store = TrialDataStore()

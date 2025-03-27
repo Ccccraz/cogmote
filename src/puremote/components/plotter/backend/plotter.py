@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvas  # type: ignore
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar  # type: ignore
 
-from puremote.models.trail_data import TrialData, TrialDataModel
+from puremote.models.trail_data import TrialDataModel, trial_data_store
 
 
 class Plotter(QWidget):
@@ -29,14 +29,13 @@ class Plotter(QWidget):
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.data_address = data_address
-        self.data = TrialData()
-        self.data.data[self.data_address].rowsInserted.connect(self.update_canvas)
+        trial_data_store.data[self.data_address].rowsInserted.connect(self.update_canvas)
 
         self.xvalue = [
-            item[self.xlabel] for item in self.data.data[self.data_address]._data
+            item[self.xlabel] for item in trial_data_store.data[self.data_address]._data
         ]
         self.yvalue = [
-            item[self.ylabel] for item in self.data.data[self.data_address]._data
+            item[self.ylabel] for item in trial_data_store.data[self.data_address]._data
         ]
 
         (self.line,) = self.ax.plot(self.xvalue, self.yvalue)
@@ -47,10 +46,10 @@ class Plotter(QWidget):
         xdata = self.line.get_xdata()
         ydata = self.line.get_ydata()
         xdata = np.append(
-            xdata, self.data.data[self.data_address]._data[first][self.xlabel]
+            xdata, trial_data_store.data[self.data_address]._data[first][self.xlabel]
         )
         ydata = np.append(
-            ydata, self.data.data[self.data_address]._data[first][self.ylabel]
+            ydata, trial_data_store.data[self.data_address]._data[first][self.ylabel]
         )
 
         self.line.set_data(xdata, ydata)
@@ -72,8 +71,7 @@ if __name__ == "__main__":
     for _ in tqdm(range(1000)):
         data.insert_new_data({"x": random.random(), "y": random.random()})
 
-        data_store = TrialData()
-        data_store.add_data("test", data)
+        trial_data_store.add_data("test", data)
 
     app = QApplication(sys.argv)
 
