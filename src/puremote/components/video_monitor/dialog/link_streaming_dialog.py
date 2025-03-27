@@ -1,8 +1,6 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QFormLayout, QFileDialog, QHBoxLayout
 
-from puremote.config.config import get_config
-
 from qfluentwidgets import (
     EditableComboBox,
     BodyLabel,
@@ -12,17 +10,20 @@ from qfluentwidgets import (
 )
 
 
+from puremote.config.config import config_store
+
+
 class LinkStreamingDialog(Dialog):
     emit_accepted = Signal(str, bool, str)  # Return rtsp server url and backend type
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self) -> None:
         """Dialog for set rtsp server url and backend type
 
         Args:
             parent (QWidget): parent widget
             config (dict): configuration
         """
-        super().__init__(self.tr("Link Streaming"), "", parent)
+        super().__init__(self.tr("Link Streaming"), "")
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -44,13 +45,11 @@ class LinkStreamingDialog(Dialog):
         Create input component
         """
 
-        config = get_config()
-
         label_address = BodyLabel("Server : ")
         self.combobox_address = EditableComboBox()
         self.combobox_address.setPlaceholderText(self.tr("Enter server address"))
 
-        item_list: list = [i for i in config.video_source.values()]
+        item_list: list = [i for i in config_store.config.video_source.values()]
         self.combobox_address.addItems(item_list)
 
         # Add input component to layout

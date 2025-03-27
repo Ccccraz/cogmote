@@ -53,10 +53,11 @@ CONFIG_FILE_PATH = Path(
     )
 )
 
-class Config:
+
+class Configure:
     def __init__(self):
         self.config = self._load_config()
-    
+
     def _create_default_config(self) -> ConfigModel:
         config = ConfigModel()
         try:
@@ -64,45 +65,44 @@ class Config:
 
             with CONFIG_FILE_PATH.open("w") as f:
                 json.dump(config.model_dump(), f, indent=4)
-                
+
             return config
         except IOError:
             logger.error("Failed to create configuration file")
-            pass
-    
+
     def _load_config(self) -> ConfigModel:
-        config: ConfigModel | None = None
         # Check if the file exists
         if not os.path.exists(CONFIG_FILE_PATH):
             logger.info("Configuration file not found")
             logger.info(f"Creating default configuration file at {CONFIG_FILE_PATH}")
-            config = self._create_default_config()
+            return self._create_default_config()
 
         # Check if the file is readable
         if not os.access(CONFIG_FILE_PATH, os.R_OK):
             logger.warning("No permission to read the configuration file")
-            return
+            logger.warning(
+                f"Trying to switch to default configuration file at {CONFIG_FILE_PATH}"
+            )
+            return self._create_default_config()
 
         try:
             with open(CONFIG_FILE_PATH, "r") as f:
-                config_data = json.load(f)
-
-            # Check if the data is valid
-            config = ConfigModel(**config_data)
-            return config
+                return ConfigModel(**json.load(f))
         except json.JSONDecodeError:
             logger.error("Configuration file format error")
         except ValidationError as e:
             logger.error(f"Configuration file is invalid: {e}")
-    
+
     def save(self):
-        if self.config is not None:
-            try:
-                with open(CONFIG_FILE_PATH, "w") as f:
-                    json.dump(self.config.model_dump(), f, indent=4)
-            except IOError:
-                logger.error("Failed to write configuration file")
+        try:
+            with open(CONFIG_FILE_PATH, "w") as f:
+                json.dump(self.config.model_dump(), f, indent=4)
+        except IOError:
+            logger.error("Failed to write configuration file")
+
+
+config_store = Configure()
 
 if __name__ == "__main__":
-    config = Config()
-    logger.info(config.get_config().model_dump_json(indent=4))
+    config = Configure()
+    logger.info(config.config.model_dump_json(indent=4))

@@ -19,6 +19,9 @@ dependencies = [
     "setuptools>=75.1.0",
     "sseclient>=0.0.27",
     "vidgear[core]>=0.3.3",
+    "injector>=0.22.0",
+    "httpx>=0.28.1",
+    "httpx-sse>=0.4.0",
 ]
 
 [project.scripts]

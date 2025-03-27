@@ -44,15 +44,17 @@ class HttpListenerSse:
 
     def listen(self):
         logger.info(f"Listening on {self.url}")
+        a = 0
         with httpx.Client() as client:
-            with connect_sse(client, "GET", self.url) as event_source:
+            with connect_sse(client, "GET", self.url, timeout = None) as event_source:
                 for sse in event_source.iter_sse():
-                    # print(sse.data)
-                    yield sse
+                    a += 1
+                    print(a)
+                    print(sse.data)
 
 
 if __name__ == "__main__":
-    listener = HttpListener("http://localhost:4203/api/trial")
+    listener = HttpListenerSse("http://localhost:9012/data")
 
     for data in listener.listen():
         print(data)

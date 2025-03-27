@@ -3,13 +3,14 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from puremote.config.config import get_config
 from qfluentwidgets import (
     EditableComboBox,
     BodyLabel,
     ComboBox,
     Dialog,
 )
+
+from puremote.config.config import config_store
 
 
 class AddTrialDataDialog(Dialog):
@@ -38,13 +39,11 @@ class AddTrialDataDialog(Dialog):
         Create input component
         """
 
-        config = get_config()
-
         label_address = BodyLabel(self.tr("Server : "))
         self.combobox_address = EditableComboBox()
         self.combobox_address.setPlaceholderText(self.tr("Input server address"))
 
-        item_list: list = [i.values() for i in config.trial_data_source]
+        item_list: list = [i.values() for i in config_store.config.trial_data_source]
         self.combobox_address.addItems(item_list)
 
         # Add input component to layout
@@ -52,7 +51,7 @@ class AddTrialDataDialog(Dialog):
 
         label_option = BodyLabel(self.tr("Server type: "))
         self.combobox_option = ComboBox()
-        item_list: list = [i for i in config.trial_data_mode]
+        item_list: list = [i for i in config_store.config.trial_data_mode]
         self.combobox_option.addItems(item_list)
         self.layout_sub.addRow(label_option, self.combobox_option)
 

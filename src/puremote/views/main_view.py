@@ -21,7 +21,6 @@ class MainWindow(FluentWindow):
     def initWindow(self):
         self.resize(960, 780)
         self.setMinimumWidth(760)
-        # self.setWindowIcon(QIcon(":/gallery/images/logo.png"))
         self.setWindowTitle(APP_NAME)
         self.setMicaEffectEnabled(False)
 
@@ -37,6 +36,7 @@ class MainWindow(FluentWindow):
         QApplication.processEvents()
 
     def initNavigation(self):
+        """Init sidebar navigation"""
         self.addSubInterface(
             self.experiments_interface,
             FluentIcon.CAMERA,

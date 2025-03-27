@@ -1,4 +1,3 @@
-from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QGridLayout
 
 from puremote.components.card.base_card import BaseCard
