@@ -34,7 +34,7 @@ class TrialDataCard(QWidget):
 
     @Slot(str, str)
     def add_data(self, address: str, option: str) -> None:
-        self.table = TrialDataView()
+        self.table = TrialDataView(self)
         self.table.init_listener(address, option)
 
         self.card.viewLayout.addWidget(self.table)
