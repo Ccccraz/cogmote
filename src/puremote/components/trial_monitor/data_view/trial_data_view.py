@@ -1,11 +1,9 @@
 import sys
-from queue import Queue
-from threading import Thread
 
 from puremote.shared.web_requests.http_listener import HttpListener, HttpListenerSse
 from puremote.models.trail_data import TrialDataModel, TrialData
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QThread, Slot
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication
 
 from qfluentwidgets import TableWidget, TableView
@@ -14,8 +12,8 @@ from qfluentwidgets import TableWidget, TableView
 class TrialDataView(QWidget):
     received = Signal()
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, parnet) -> None:
+        super().__init__(parent=parnet)
         self.layout_main = QVBoxLayout()
         self.setLayout(self.layout_main)
         self.layout_main.setContentsMargins(0, 0, 0, 0)
@@ -31,27 +29,30 @@ class TrialDataView(QWidget):
         self.table.setColumnCount(10)
         self.layout_main.addWidget(self.table)
 
+
     def init_listener(self, address: str, option: str) -> None:
         self.address = address
+        self.listener_thread = QThread(self)
+
         if option == "sse":
             self.listener = HttpListenerSse(address)
         elif option == "polling":
             self.listener = HttpListener(address)
 
-        self.data_queue: Queue = Queue()
+        self.listener.moveToThread(self.listener_thread)
 
-        self._listener_thread = Thread(target=self._update_data)
-        self._listener_thread.start()
+        self.listener_thread.started.connect(self.listener.run)
+        self.listener_thread.finished.connect(self.listener_thread.deleteLater)
+
+        self.listener.finished.connect(self.listener_thread.quit)
+        self.listener.finished.connect(self.listener.deleteLater)
+        self.listener.received.connect(self._update_view)
+
         self._is_init = False
-        self.received.connect(self._update_view)
+        self.listener_thread.start()
 
-    def _update_data(self):
-        for data in self.listener.listen():
-            self.data_queue.put(data)
-            self.received.emit()
-
-    def _update_view(self) -> None:
-        data = self.data_queue.get()
+    @Slot(str)
+    def _update_view(self, data) -> None:
         if self._is_init is not True:
             self.layout_main.removeWidget(self.table)
             self.table.deleteLater()
@@ -74,15 +75,19 @@ class TrialDataView(QWidget):
     def stop(self) -> None:
         if self.listener is not None:
             self.listener.stop()
-            self.is_running = False
-            self._listener_thread.join()
 
 
 if __name__ == "__main__":
+    from PySide6.QtWidgets import QMainWindow
     app = QApplication(sys.argv)
-    data = TrialDataView()
-    # window = BaseCard("hello", data, 0)
-    # window.init_listener("test", "sse")
 
-    # window.show()
+    class MainWindow(QMainWindow):
+        def __init__(self) -> None:
+            super().__init__()
+            self.setWindowTitle("Trial Data View")
+            self.resize(800, 600)
+            self.setCentralWidget(TrialDataView())
+
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec())
