@@ -6,12 +6,13 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QFont
 from puremote.shared.base.singleton_base import SingletonMeta
+import json
 
 
 class TrialDataModel(QAbstractTableModel):
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: str) -> None:
         super().__init__()
-        self._data = [data] or []
+        self._data = [json.loads(data)] or []
 
     def rowCount(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
@@ -54,10 +55,10 @@ class TrialDataModel(QAbstractTableModel):
 
         return None
 
-    def insert_new_data(self, row_data: dict):
+    def insert_new_data(self, row_data: str):
         position = len(self._data)
         self.beginInsertRows(QModelIndex(), position, position)
-        self._data.append(row_data)
+        self._data.append(json.loads(row_data))
         self.endInsertRows()
 
 
