@@ -6,6 +6,7 @@ from PySide6.QtCore import (
     QPersistentModelIndex,
 )
 from PySide6.QtGui import QFont
+from puremote.common.logger import logger
 import json
 
 
@@ -61,6 +62,9 @@ class TrialDataModel(QAbstractTableModel):
         self._data.append(json.loads(row_data))
         self.endInsertRows()
 
+    def labels(self):
+        return list(self._data[0].keys())
+
 
 @dataclass
 class TrialData:
@@ -69,7 +73,7 @@ class TrialData:
     data: TrialDataModel
 
 
-class TrialDataStore():
+class TrialDataStore:
     def __init__(self) -> None:
         self._store: dict[str, TrialData] = {}
 
@@ -77,8 +81,19 @@ class TrialDataStore():
         data = TrialData(nickname, address, trial_data)
         self._store[address] = data
 
+    def remove_data(self, address: str) -> None:
+        if address in self._store:
+            del self._store[address]
+
+    def labels(self, address: str) -> list[str]:
+        if address not in self._store:
+            logger.warning(f"Address {address} not found in trial data store")
+            return []
+        return list(self._store[address].data.labels())
+
     @property
     def data(self):
         return self._store
+
 
 trial_data_store = TrialDataStore()
