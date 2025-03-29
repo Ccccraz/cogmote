@@ -1,4 +1,3 @@
-from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 from PySide6.QtCore import Slot
 
@@ -32,10 +31,10 @@ class TrialDataCard(QWidget):
 
         self.card.addFunctionButtons([button, button_close])
 
-    @Slot(str, str)
-    def add_data(self, address: str, option: str) -> None:
+    @Slot(str, str, str)
+    def add_data(self, nickname: str, address: str, mode: str) -> None:
         self.table = TrialDataView(self)
-        self.table.init_listener(address, option)
+        self.table.init_listening(nickname, address, mode)
 
         self.card.viewLayout.addWidget(self.table)
         self.card.viewLayout.setContentsMargins(10, 10, 10, 10)
@@ -53,7 +52,3 @@ class TrialDataCard(QWidget):
             self.table.deleteLater()
         except AttributeError:
             pass
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.stop()
-        return super().closeEvent(event)
