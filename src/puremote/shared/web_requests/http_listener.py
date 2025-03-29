@@ -28,7 +28,7 @@ class HttpListener(QObject):
                     response = client.get(self.url, timeout=None)
 
                     if response.status_code == httpx.codes.OK:
-                        data: dict = response.text()
+                        data: dict = response.text()  # type: ignore
                         trial_id = data["trialID"]
                         if trial_id != previous_id:
                             previous_id = trial_id
@@ -41,6 +41,7 @@ class HttpListener(QObject):
 
 class HttpListenerSse(QObject):
     received = Signal(str)
+    finished = Signal()
 
     def __init__(self, address: str) -> None:
         super().__init__()
@@ -57,13 +58,18 @@ class HttpListenerSse(QObject):
         logger.info(f"Listening on {self.url}")
 
         try:
+            # event_source = connect_sse(self.client, "GET", self.url, timeout=None)
             with connect_sse(
                 self.client, "GET", self.url, timeout=None
-            ) as event_source:
-                for sse in event_source.iter_sse():
+            ) as self.event_source:
+                for sse in self.event_source.iter_sse():
                     self.received.emit(sse.data)
+        except ConnectionAbortedError:
+            logger.info("Listener stopped")
         except Exception as e:
-            logger.error(f"Listener crashed: {str(e)}")
+            logger.error(f"Listener crashed: {e}")
+        finally:
+            self.finished.emit()
 
 
 if __name__ == "__main__":
@@ -86,8 +92,6 @@ if __name__ == "__main__":
             self.listener.moveToThread(self.test_thread)
 
             self.test_thread.started.connect(self.listener.run)
-            self.listener.finished.connect(self.test_thread.quit)
-            self.listener.finished.connect(self.listener.deleteLater)
             self.test_thread.finished.connect(self.test_thread.deleteLater)
             self.listener.received.connect(self.on_received)
 
