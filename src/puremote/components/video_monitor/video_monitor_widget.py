@@ -84,7 +84,3 @@ class VideoMonitorCard(QWidget):
         dialog_record = RecordStreamingDialog()
         dialog_record.emit_accepted.connect(self.record)
         dialog_record.exec()
-
-    def closeEvent(self, event):
-        self.stop_play()
-        super().closeEvent(event)
