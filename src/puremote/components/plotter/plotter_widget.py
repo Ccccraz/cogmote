@@ -1,9 +1,10 @@
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QWidget, QGroupBox, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from puremote.components.plotter.dialog.add_figure_dialog import AddFigureDialog
 from puremote.components.plotter.backend.plotter import Plotter
 from puremote.components.card.base_card import BaseCard
+from puremote.config.config import FigureConfig
 
 from qfluentwidgets import PrimaryPushButton
 
@@ -36,10 +37,10 @@ class PlotterCard(QWidget):
         dialog.emit_accepted.connect(self.add_figure)
         dialog.exec()
 
-    @Slot(str, str, str)
-    def add_figure(self, data: str, xaxis: str, yaxis: str):
+    @Slot(FigureConfig, str)
+    def add_figure(self, figure: FigureConfig, address: str):
         plotter = Plotter()
-        plotter.initialize_plot(xaxis, yaxis, data)
+        plotter.initialize_plot(figure, address)
         self.layout_figures.addWidget(plotter)
 
 

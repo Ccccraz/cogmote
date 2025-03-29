@@ -1,11 +1,9 @@
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QMouseEvent
+from typing import Callable
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
-    QLabel,
     QFormLayout,
 )
 
-from puremote.models.trail_data import trial_data_store
 from qfluentwidgets import (
     EditableComboBox,
     BodyLabel,
@@ -14,23 +12,15 @@ from qfluentwidgets import (
 )
 
 from puremote.config.config import config_store
-
-
-class RefreshComboBox(ComboBox):
-    clicked = Signal()
-
-    def __init__(self, *args, **kwargs):
-        super(RefreshComboBox, self).__init__(*args, **kwargs)
-
-    def mousePressEvent(self, e: QMouseEvent) -> None:
-        self.clicked.emit()
-        return super(RefreshComboBox, self).mousePressEvent(e)
+from puremote.config.config import TrialDataConfig, FigureConfig
+from puremote.common.logger import logger
+from puremote.models.trail_data import trial_data_store
 
 
 class AddFigureDialog(Dialog):
     """Dialog to select a figure to plot"""
 
-    emit_accepted = Signal(str, str, str)
+    emit_accepted = Signal(FigureConfig, str)
 
     def __init__(self, parent=None):
         super().__init__(self.tr("Add figure"), "", parent)
@@ -52,11 +42,30 @@ class AddFigureDialog(Dialog):
 
     def _init_plotter(self):
         # Add Plot data source
-        label_data = BodyLabel(self.tr("data"))
-        self.combo_box_data = RefreshComboBox()
-        self.combo_box_data.clicked.connect(self.index_data)
-        self.combo_box_data.currentTextChanged.connect(self.index_axis)
-        self.layout_input.addRow(label_data, self.combo_box_data)
+        data = trial_data_store.data
+
+        # Add data nickname
+        label_nickname = BodyLabel(self.tr("data_nickname"))
+        self.combobox_nickname = ComboBox()
+
+        data_items = [i.nickname for i in data.values()]
+
+        self.combobox_nickname.addItems(data_items)
+        self.layout_input.addRow(label_nickname, self.combobox_nickname)
+
+        # Add data address
+        label_data = BodyLabel(self.tr("data_address"))
+        self.combobox_address = ComboBox()
+
+        data_items = [i for i in data.keys()]
+
+        self.combobox_address.addItems(data_items)
+        self.layout_input.addRow(label_data, self.combobox_address)
+
+        # Add figure nickname
+        label_figure_nickname = BodyLabel(self.tr("figure"))
+        self.combobox_figure_nickname = EditableComboBox()
+        self.layout_input.addRow(label_figure_nickname, self.combobox_figure_nickname)
 
         # Add x axis data
         labels_xaxis = BodyLabel(self.tr("x axis"))
@@ -64,7 +73,6 @@ class AddFigureDialog(Dialog):
         self.layout_input.addRow(labels_xaxis, self.combo_box_xaxis)
 
         # Add y axis data
-        label_yaxis = QLabel("y axis")
         label_yaxis = BodyLabel(self.tr("y axis"))
         self.combo_box_yaxis = EditableComboBox()
         self.layout_input.addRow(label_yaxis, self.combo_box_yaxis)
@@ -72,46 +80,88 @@ class AddFigureDialog(Dialog):
         # Add figure type
         label_type = BodyLabel(self.tr("type"))
         self.combo_box_type = EditableComboBox()
+        self.combo_box_type.addItems(["line", "scatter"])
         self.layout_input.addRow(label_type, self.combo_box_type)
 
-        # Add preset
-        for i in config_store.config.figure:
-            self.combo_box_data.addItem(i.nickname)
+        # Add data update logic
+        self.combobox_nickname.currentTextChanged.connect(self._update_by_nickname)
+        self.combobox_address.currentTextChanged.connect(self._update_by_address)
+        self.combobox_figure_nickname.currentTextChanged.connect(self._update_by_figure)
+
+        # Add initial data
+        self._update_by_address(self.combobox_address.currentText())
 
     def _emit_accepted(self):
         """Emit accepted signal with selected data"""
-        self.emit_accepted.emit(
-            self.combo_box_data.currentText(),
-            self.combo_box_xaxis.currentText(),
-            self.combo_box_yaxis.currentText(),
+        if self.trial:
+            figure_nickname = self.combobox_figure_nickname.currentText()
+            x_axis = self.combo_box_xaxis.currentText()
+            y_axis = self.combo_box_yaxis.currentText()
+            figure_type = self.combo_box_type.currentText()
+
+            new_figure = FigureConfig(figure_nickname, x_axis, y_axis, figure_type)
+
+            config_store.add_figure(self.trial.address, new_figure)
+
+            self.emit_accepted.emit(
+                new_figure,
+                self.combobox_address.currentText(),
+            )
+
+    @Slot(str)
+    def _update_by_nickname(self, nickname: str):
+        self._update_trial_data(
+            lambda trial: trial.nickname == nickname, "nickname", nickname
         )
 
-    def index_data(self):
-        self.combo_box_data.clear()
+    @Slot(str)
+    def _update_by_address(self, address: str):
+        self._update_trial_data(
+            lambda trial: trial.address == address, "address", address
+        )
 
-        # add preset
-        for i in config_store.config.figure:
-            self.combo_box_data.addItem(i.nickname)
-
-        # add data address from trialdata
-        for i in trial_data_store.data:
-            self.combo_box_data.addItem(i)
-
-    def index_axis(self):
+    def _update_trial_data(
+        self,
+        condition: Callable[[TrialDataConfig], bool],
+        condition_type: str,
+        condition_value,
+    ):
         self.combo_box_xaxis.clear()
         self.combo_box_yaxis.clear()
+        self.combobox_figure_nickname.clear()
 
-        for i in config_store.config.figure:
-            if self.combo_box_data.currentText() == i.nickname:
-                self.combo_box_xaxis.addItem(i.x_axis)
-                self.combo_box_yaxis.addItem(i.y_axis)
+        self.trial = next(
+            (trial for trial in config_store.config.trial_data if condition(trial)),
+            None,
+        )
 
-        if trial_data_store.data != {}:
-            keys = trial_data_store.data[self.combo_box_data.currentText()]._data[0].keys()
+        if not self.trial:
+            return
 
-            for i in keys:
-                self.combo_box_xaxis.addItem(i)
-                self.combo_box_yaxis.addItem(i)
+        if condition_type == "nickname":
+            self.combobox_address.setCurrentText(self.trial.address)
+        elif condition_type == "address":
+            self.combobox_nickname.setCurrentText(self.trial.nickname)
+
+        self.combo_box_xaxis.addItems(trial_data_store.labels(self.trial.address))
+        self.combo_box_yaxis.addItems(trial_data_store.labels(self.trial.address))
+
+        if self.trial.figures:
+            nickname = [figure.nickname for figure in self.trial.figures]
+            self.combobox_figure_nickname.addItems(nickname)
+        else:
+            logger.warning(f"No figure found for {condition_type}: {condition_value}")
+
+    def _update_by_figure(self, figure_name: str):
+        if self.trial:
+            figure = next(
+                (i for i in self.trial.figures if i.nickname == figure_name),
+                None,
+            )
+
+            if figure:
+                self.combo_box_xaxis.setCurrentText(figure.x_axis)
+                self.combo_box_yaxis.setCurrentText(figure.y_axis)
 
 
 if __name__ == "__main__":
