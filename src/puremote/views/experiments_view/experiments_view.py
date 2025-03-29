@@ -14,7 +14,7 @@ class ExperimentsInterface(QWidget):
         self._init_ui()
 
     def _init_ui(self):
-        self.layout_main = QGridLayout()
+        self.layout_main = QGridLayout(self)
         self.layout_main.setColumnStretch(0, 3)
         self.layout_main.setColumnStretch(1, 7)
         self.layout_main.setRowStretch(0, 7)
@@ -31,6 +31,3 @@ class ExperimentsInterface(QWidget):
         self.layout_main.addWidget(self.card_trial_data, 1, 1)
 
         self.setLayout(self.layout_main)
-
-    def stop(self):
-        self.card_trial_data.stop()
