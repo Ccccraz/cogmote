@@ -6,7 +6,7 @@ from threading import Thread
 
 from PySide6.QtCore import QSize, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout
-from PySide6.QtGui import QCloseEvent, QImage, QResizeEvent
+from PySide6.QtGui import QImage, QResizeEvent
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtOpenGL import QOpenGLTexture
 
@@ -158,10 +158,6 @@ if __name__ == "__main__":
             self._init_ui()
             self.viewer.set_media(r"assets\test_anuimal.mp4")
             self.viewer.play()
-
-        def closeEvent(self, event: QCloseEvent) -> None:
-            self.viewer.stop()
-            return super().closeEvent(event)
 
         def _init_ui(self) -> None:
             self.widget = QWidget()
