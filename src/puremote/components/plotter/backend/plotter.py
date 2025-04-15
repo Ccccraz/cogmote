@@ -65,8 +65,8 @@ class Plotter(QWidget):
         # Update the plot if new data is added
         data = self.raw_data[first]
 
-        self.xdata = np.concatenate((self.xdata, data[self.figure_config.x_axis]))
-        self.ydata = np.concatenate((self.ydata, data[self.figure_config.y_axis]))
+        self.xdata = np.append(self.xdata, data[self.figure_config.x_axis])
+        self.ydata = np.append(self.ydata, data[self.figure_config.y_axis])
 
         self.line.set_data(self.xdata, self.ydata)
 
