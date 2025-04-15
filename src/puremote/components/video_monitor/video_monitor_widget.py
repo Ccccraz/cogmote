@@ -2,6 +2,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from puremote.components.video_monitor.backend.vlc_backend import VlcBackend
+from puremote.components.video_monitor.backend.webrtc import WebRTCBackend
 from puremote.components.video_monitor.dialog.link_streaming_dialog import (
     LinkStreamingDialog,
 )
@@ -52,8 +53,8 @@ class VideoMonitorCard(QWidget):
 
     @Slot(str, bool, str)
     def play(self, address: str, record: bool, target: str):
-        print(address, record, target)
-        self.video_player = VlcBackend(address, record, target, self)
+        self.video_player = WebRTCBackend(address, record, target)
+        # self.video_player = VlcBackend(address, record, target, self)
         self.card.viewLayout.addWidget(self.video_player)
 
     def record(self, target):
