@@ -4,7 +4,6 @@ import DataQuickJudgeView from "@/views/DataQuickJudgeView.vue";
 import VideoMonitorView from "@/views/VideoMonitorView.vue";
 import DeviceHomeView from "@/views/DeviceHomeView.vue";
 import Dashboardview from "@/views/Dashboardview.vue"
-import Deviceview from "@/views/Deviceview.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
