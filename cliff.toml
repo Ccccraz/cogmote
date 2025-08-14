@@ -74,7 +74,7 @@ postprocessors = [
 
 [remote.github]
 owner = "Ccccraz"
-repo = "cogmoteGO"
+repo = "cogmote"
 
 [git]
 # parse the commits based on https://www.conventionalcommits.org
