@@ -18,7 +18,7 @@ const device = deviceStore.getDevice(address) as DeviceInfo;
 const trialDataStore = useTrialDataStore();
 
 const latestData = computed(() => {
-  const trialData = trialDataStore.getChannelData(address, "mock");
+  const trialData = trialDataStore.getChannelData(address, "default");
   const lastItem = trialData[trialData.length - 1];
 
   return lastItem
