@@ -22,11 +22,37 @@ const deviceStore = useDeviceStore();
 const ipParts = ref<string[]>(["192", "168", "1", "*"]);
 
 const ipList = computed(() => {
-  return Array.from(
-    { length: 255 },
-    (_, i) =>
-      `${ipParts.value[0]}.${ipParts.value[1]}.${ipParts.value[2]}.${i + 1}`
-  );
+  const [part1, part2, part3, part4] = ipParts.value;
+
+  const validatePart = (part: string) => {
+    if (part === "*") return true;
+    const num = parseInt(part, 10);
+    return !isNaN(num) && num >= 0 && num <= 255;
+  };
+
+  if (
+    !validatePart(part1) ||
+    !validatePart(part2) ||
+    !validatePart(part3) ||
+    !validatePart(part4)
+  ) {
+    console.error("Invalid IP part: must be a number between 0-255 or '*'");
+    return [];
+  }
+
+  if (part3 === "*" && part4 === "*") {
+    return Array.from({ length: 256 * 256 }, (_, i) => {
+      const third = Math.floor(i / 256);
+      const fourth = i % 256;
+      return `${part1}.${part2}.${third}.${fourth}`;
+    });
+  } else if (part4 === "*") {
+    return Array.from({ length: 256 }, (_, i) => {
+      return `${part1}.${part2}.${part3}.${i}`;
+    });
+  }
+
+  return [`${part1}.${part2}.${part3}.${part4}`];
 });
 
 const detect = async () => {
@@ -58,16 +84,6 @@ const detect = async () => {
           <Label> Range: </Label>
           <template v-for="(part, index) in ipParts">
             <Input
-              v-if="index !== 3"
-              :id="`ip-part-${index}`"
-              v-model="ipParts[index]"
-              :default-value="`${part}`"
-              type="number"
-              maxlength="3"
-            />
-            <Input
-              v-else
-              disabled
               :id="`ip-part-${index}`"
               v-model="ipParts[index]"
               :default-value="`${part}`"
