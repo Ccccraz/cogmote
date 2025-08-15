@@ -6,7 +6,7 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 
-const channel = "mock"
+const channel = "default"
 
 const trialDataStore = useTrialDataStore();
 const connect = async () => {

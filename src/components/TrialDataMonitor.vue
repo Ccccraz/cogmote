@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const address = props.device.address;
-const channel = "mock";
+const channel = "default";
 
 const trialDataStore = useTrialDataStore();
 
