@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import { DeviceInfo, Device } from "@/types/device";
+import { invoke } from "@tauri-apps/api/core";
 import ky from "ky";
 
 export const useDeviceStore = defineStore("devices", () => {
@@ -39,7 +40,7 @@ export const useDeviceStore = defineStore("devices", () => {
     loading.value = true;
     detectedDevices.value = 0;
     try {
-      const results = await Promise.all(
+      await Promise.all(
         addresses.map(async (address) => {
           const device = await fetchDevice(address);
           if (device) {
@@ -50,14 +51,22 @@ export const useDeviceStore = defineStore("devices", () => {
           return null;
         })
       );
-      results.forEach((result) => {
-        if (result) {
-          devices.value.set(result.address, result.device);
-        }
-      });
-      console.log("Devices:", devices.value);
     } catch (err) {
       console.log("Error fetching devices:", err);
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const detectDevices = async (addresses: string[]) => {
+    loading.value = true;
+    try {
+      const results = await invoke<string[]>("fetch_devices", {
+        addresses,
+      });
+
+      await fetchDevices(results);
+    } catch (err) {
     } finally {
       loading.value = false;
     }
@@ -74,7 +83,7 @@ export const useDeviceStore = defineStore("devices", () => {
   return {
     devices,
     addDevice,
-    fetchDevices,
+    fetchDevices: detectDevices,
     loading,
     numberOfDetectedDevices,
     getDevice,
