@@ -26,7 +26,8 @@ defineProps<{
     <CardHeader>
       <div class="flex justify-between">
         <CardTitle>{{ device.device.hostname }}</CardTitle>
-        <Badge class="bg-green-300">{{ device.status }}</Badge>
+        <Badge v-if="device.status === 'online'" class="bg-green-300">{{ device.status }}</Badge>
+        <Badge v-else="device.status === 'offline'" class="bg-red-300">{{ device.status }}</Badge>
       </div>
       <CardDescription>Last online: 1 day</CardDescription>
     </CardHeader>

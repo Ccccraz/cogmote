@@ -2,12 +2,113 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import { DeviceInfo, Device } from "@/types/device";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  BaseDirectory,
+  create,
+  exists,
+  mkdir,
+  readTextFile,
+  writeTextFile,
+} from "@tauri-apps/plugin-fs";
 import ky from "ky";
 
 export const useDeviceStore = defineStore("devices", () => {
   const devices = ref<Map<string, DeviceInfo>>(new Map());
   const loading = ref(false);
   const detectedDevices = ref(0);
+
+  const initlize = async () => {
+    const ifDirectoriesExist = await exists("", {
+      baseDir: BaseDirectory.AppData,
+    });
+
+    if (!ifDirectoriesExist) {
+      await mkdir("", {
+        baseDir: BaseDirectory.AppData,
+      });
+    }
+
+    const ifFileExists = await exists("devices.json", {
+      baseDir: BaseDirectory.AppData,
+    });
+
+    if (!ifFileExists) {
+      await create(`devices.json`, {
+        baseDir: BaseDirectory.AppData,
+      });
+
+      await writeTextFile("devices.json", JSON.stringify([]), {
+        baseDir: BaseDirectory.AppData,
+      });
+      return;
+    }
+
+    try {
+      const devicesRaw = await readTextFile("devices.json", {
+        baseDir: BaseDirectory.AppData,
+      });
+      const devicesJson = JSON.parse(devicesRaw || "[]");
+
+      devicesJson.forEach((deviceInfo: DeviceInfo) => {
+        if (deviceInfo.address && deviceInfo.device) {
+          devices.value.set(deviceInfo.address, deviceInfo);
+        }
+      });
+
+      await Promise.all(
+        Array.from(devices.value.keys()).map((address) =>
+          reconnectDevice(address)
+        )
+      );
+
+      await saveDevicesToFile();
+    } catch (err) {
+      console.error("Error reading devices.json:", err);
+      await writeTextFile("devices.json", JSON.stringify([]), {
+        baseDir: BaseDirectory.AppData,
+      });
+    }
+  };
+
+  const reconnectDevice = async (address: string) => {
+    const deviceInfo = devices.value.get(address);
+    if (!deviceInfo) return;
+
+    try {
+      const currentDevice = await fetchDevice(address);
+      if (currentDevice) {
+        devices.value.set(address, {
+          ...currentDevice,
+          status: "online",
+        });
+      } else {
+        devices.value.set(address, {
+          ...deviceInfo,
+          status: "offline",
+        });
+      }
+    } catch (err) {
+      devices.value.set(address, {
+        ...deviceInfo,
+        status: "offline",
+      });
+    }
+  };
+
+  const saveDevicesToFile = async () => {
+    try {
+      const devicesArray = Array.from(devices.value.values());
+      await writeTextFile(
+        "devices.json",
+        JSON.stringify(devicesArray, null, 2),
+        {
+          baseDir: BaseDirectory.AppData,
+        }
+      );
+    } catch (err) {
+      console.error("Error saving devices to file:", err);
+    }
+  };
 
   const addDevice = async (address: string) => {
     loading.value = true;
@@ -51,6 +152,7 @@ export const useDeviceStore = defineStore("devices", () => {
           return null;
         })
       );
+      await saveDevicesToFile();
     } catch (err) {
       console.log("Error fetching devices:", err);
     } finally {
@@ -81,6 +183,8 @@ export const useDeviceStore = defineStore("devices", () => {
   const numberOfDetectedDevices = () => {
     return detectedDevices.value;
   };
+
+  initlize();
 
   return {
     devices,
