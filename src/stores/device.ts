@@ -65,6 +65,8 @@ export const useDeviceStore = defineStore("devices", () => {
         addresses,
       });
 
+      console.log("Detected devices:", results);
+
       await fetchDevices(results);
     } catch (err) {
     } finally {
