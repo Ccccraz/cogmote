@@ -65,17 +65,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          name: ${{ github.ref }}
-          tag_name: ${{ github.ref }}
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           body: ${{ steps.git-cliff.outputs.content }}
           files: |
             dist/*.exe
             dist/*.zip
             dist/*.dmg
             dist/*.AppImage
-            dist/*.snap
             dist/*.deb
             dist/*.rpm
             dist/*.tar.gz
-            dist/*.yml
+            dist/latest*.yml
             dist/*.blockmap
