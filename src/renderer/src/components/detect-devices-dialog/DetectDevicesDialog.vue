@@ -82,7 +82,7 @@ const domainList = computed(() => genDomainList(domainParts.value))
       </div>
 
       <DialogFooter>
-        <Button @click="'id' === detectMethod.value ? detect(ipList) : detectDomain(domainList)">
+        <Button @click="detectMethod.value === 'ip' ? detect(ipList) : detectDomain(domainList)">
           <Loader2 v-if="deviceStore.loading" class="animate-spin" /> Detect
         </Button>
       </DialogFooter>
