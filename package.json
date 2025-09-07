@@ -1,7 +1,7 @@
 {
   "name": "cogmote",
-  "version": "1.0.0",
-  "description": "An Electron application with Vue and TypeScript",
+  "version": "0.1.4",
+  "description": "a client for remote experiment monitoring",
   "main": "./out/main/index.js",
   "author": "huyang",
   "homepage": "https://electron-vite.org",
