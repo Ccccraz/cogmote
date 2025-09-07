@@ -7,13 +7,13 @@ const deviceStore = useDeviceStore()
 <template>
   <div class="w-full h-svh overflow-y-auto">
     <div class="grid grid-cols-3 gap-4 p-4">
-      <DataQuickJudge
-        v-for="[address, device] in deviceStore.devices"
-        :key="`data-quick-judge-${address}`"
-        :hostname="`${device.device.hostname}`"
-        :trial-id="120"
-        :correct-rate="48.5"
-      />
+      <template v-for="[address, device] in deviceStore.devices">
+        <DataQuickJudge
+          v-if="device.status !== 'offline'"
+          :key="`data-quick-judge-${address}`"
+          :address="address"
+        />
+      </template>
     </div>
   </div>
 </template>
