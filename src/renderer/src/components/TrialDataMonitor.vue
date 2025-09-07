@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { DeviceInfo } from '@/types/device'
 import { useTrialDataStore } from '@/stores/trialData'
-import { onMounted, ref } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { TableV2Instance } from 'element-plus'
 
 const props = defineProps<{
@@ -35,32 +35,58 @@ const createColumns = (
   }))
 }
 
-const data = ref<unknown[]>([])
-const columns = ref<unknown[]>([])
+const data = ref<object[]>([])
+const columns = ref<object[]>([])
 
 const tableRef = ref<TableV2Instance>()
 
-function scrollByRows(row: number): void {
-  tableRef.value?.scrollToRow(row)
+function scrollToBottom(): void {
+  if (data.value.length > 0) {
+    tableRef.value?.scrollToRow(data.value.length - 1)
+  }
 }
 
-onMounted(async () => {
-  try {
-    await trialDataStore.connectSSE(address, channel, (newData) => {
+const latestData = computed(() => {
+  const trialData = trialDataStore.getChannelData(address)
+  return trialData?.length > 0 ? trialData[trialData.length - 1] : null
+})
+
+watch(
+  latestData,
+  (newData) => {
+    if (newData) {
       data.value.push({
         id: `row-${data.value.length}`,
         parentId: null,
         ...newData
       })
 
-      if (data.value.length > 0 && columns.value.length === 0) {
+      if (columns.value.length === 0) {
         columns.value = createColumns(newData)
       }
 
-      scrollByRows(data.value.length)
-    })
-  } catch (err) {
-    console.error('failed to connect to device: ', err)
+      nextTick(() => {
+        scrollToBottom()
+      })
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  trialDataStore.connectSSE(address, channel)
+
+  const trialData = trialDataStore.getChannelData(address)
+  if (trialData) {
+    data.value = trialData.map((data, index) => ({
+      id: `row-${index}`,
+      parentId: null,
+      ...data
+    }))
+  }
+
+  if (data.value.length > 0 && columns.value.length === 0) {
+    columns.value = createColumns(data.value[0])
   }
 })
 </script>
