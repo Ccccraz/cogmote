@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { api } from './fs_utils'
+import { nativeTheme } from 'electron/main'
 
 function createWindow(): void {
   // Create the browser window.
@@ -11,7 +12,14 @@ function createWindow(): void {
     height: 670,
     show: false,
     titleBarStyle: 'hidden',
-    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+    ...(process.platform !== 'darwin'
+      ? {
+          titleBarOverlay: {
+            color: '#171717',
+            symbolColor: '#ffffff'
+          }
+        }
+      : {}),
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -19,6 +27,8 @@ function createWindow(): void {
       sandbox: false
     }
   })
+
+  nativeTheme.themeSource = 'dark'
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
