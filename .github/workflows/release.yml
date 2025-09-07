@@ -37,7 +37,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pnpm install
-          pnpm approve-builds --accept-all
+          pnpm approve-builds --global
 
       - name: build-linux
         if: matrix.os == 'ubuntu-latest'
