@@ -18,10 +18,16 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python (macOS only)
+        if: matrix.os == 'macos-latest'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
