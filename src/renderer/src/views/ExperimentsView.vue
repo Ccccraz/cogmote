@@ -4,6 +4,6 @@ import DeviceList from '@/components/DeviceList.vue'
 
 <template>
   <div class="flex-1">
-    <DeviceList />
+    <DeviceList address="test" />
   </div>
 </template>

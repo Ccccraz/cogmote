@@ -15,7 +15,7 @@ const deviceStore = useDeviceStore()
       <RouterLink
         v-if="device.status != 'offline'"
         class="hover:bg-accent p-4 border rounded-xl"
-        :class="{ 'bg-accent': target === address }"
+        :class="{ 'bg-accent': address === target }"
         :to="`/device/${target}`"
       >
         {{ target }}
