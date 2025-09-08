@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import { useDeviceStore } from '@/stores/device'
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const deviceStore = useDeviceStore()
+defineProps<{
+  address: string
+}>()
 
-const addresses = computed(() => Array.from(deviceStore.devices.keys()))
+const deviceStore = useDeviceStore()
 </script>
 
 <template>
   <div class="flex flex-col gap-2 p-2">
-    <template v-for="address in addresses" :key="address">
-      <router-link class="hover:bg-accent p-4 border rounded-xl" :to="`/device/${address}`">{{
-        address
-      }}</router-link>
+    <template v-for="[target, device] in deviceStore.devices" :key="`device-list-${target}`">
+      <RouterLink
+        v-if="device.status != 'offline'"
+        class="hover:bg-accent p-4 border rounded-xl"
+        :class="{ 'bg-accent': target === address }"
+        :to="`/device/${target}`"
+      >
+        {{ target }}
+      </RouterLink>
     </template>
   </div>
 </template>
